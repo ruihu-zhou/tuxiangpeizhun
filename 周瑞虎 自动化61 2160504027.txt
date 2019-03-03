@@ -1,0 +1,33 @@
+clc
+clear
+data = imread("image B.jpg");
+data1 = imread("image A.jpg");
+
+unregistered =data;%%未配准图像
+rect=data1;%%参考图像
+cpselect(unregistered,rect);%%%选择点对，选完后记得保存
+
+A = [fixedPoints(:,2)';fixedPoints(:,1)';1 1 1 1 1 1 1];
+B = [movingPoints(:,2)';movingPoints(:,1)';1 1 1 1 1 1 1];
+
+B2A = (A * B' * (B * B') ^(-1)) ^-1;
+
+
+
+[row,col,de] = size(data);
+s = B2A ^ -1 * [1 row 1 row;1 1 col col;1 1 1 1];
+row1 = round( max( s(1,:), [],2));
+col1  = round( max( s(2,:), [],2));
+dst_data5 = ones(row1,col1,3);
+for i = 1:size(dst_data5,1)
+    for j = 1:size(dst_data5,2)
+        t1 = round(B2A * [i j 1]');
+        if(t1(1) > 0 && t1(2) > 0 && t1(1) <= size(data,1) && t1(2) <= size(data,2))
+            dst_data5(i,j,:) = data(t1(1),t1(2),:);
+        else
+            dst_data5(i,j,:) = dst_data5(i,j,:) * 0;
+        end
+    end
+end 
+
+imwrite(uint8(dst_data5),"B2A.jpg");
